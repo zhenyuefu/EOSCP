@@ -1,7 +1,7 @@
 import random
 from math import ceil
 
-from esop import ESOP, Observation, Request, Satellite, User
+from esop import EOSCP, Observation, Request, Satellite, User
 
 OBSERVATION_PER_REQUEST = 2
 
@@ -88,7 +88,7 @@ def generate_random_esop_instance(num_satellites, num_exclusive_users, num_reque
                 obs_satellite = random.choice(satellites)
                 add_theta(observations, request, obs_satellite, user, i)
     
-    return ESOP(satellites=satellites, users=users, requests=requests, observations=observations)
+    return EOSCP(satellites=satellites, users=users, requests=requests, observations=observations)
 
 
 if __name__ == '__main__':
