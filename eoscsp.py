@@ -39,11 +39,11 @@ class Satellite:
     :param capacity: 卫星在其轨道计划期间的最大观测数量，属于正整数集 N+。
     :param transition_time: 卫星在两个观测之间的转换时间，属于实数集 R+。
     """
-    id: int = field(default_factory=lambda counter=count(): next(counter), init=False)
     start_time: float
     end_time: float
     capacity: int
     transition_time: float
+    id: int = field(default_factory=lambda counter=count(): next(counter))
 
 
 @dataclass
@@ -56,9 +56,9 @@ class User:
                 的子集。
     :param p: 优先级，属于正整数集 N+（数值越低，优先级越高，用于解决冲突）。
     """
-    id: int = field(default_factory=lambda counter=count(): next(counter), init=False)
     exclusive_times: List[Tuple[Satellite, Tuple[float, float]]]  # 独占时间窗口集合
     p: int = field(default=10)  # 优先级
+    id: int = field(default_factory=lambda counter=count(): next(counter))
 
 
 @dataclass
@@ -80,19 +80,16 @@ class Observation:
     i: int
     t_start: float
     t_end: float
-    delta: float = field(init=False)
+    delta: float
     request: Request
     rho: float
     s: Satellite
     u: User
     p: int
-    
-    def __post_init__(self):
-        self.delta = self.t_end - self.t_start
 
 
 @dataclass
-class EOSCP:
+class EOSCSP:
     r"""
     地球观测卫星星座调度问题定义为一个元组 :math:`P = (S, U, R, O)`，其中 S 是卫星集合，U 是用户集合，R 是请求集合，O 是需要调度以履行 R 中请求的观测集合。
     这个问题的目标是有效地调度卫星星座中的观测，以满足用户的请求，同时考虑独占时间窗口和卫星的能力限制。
@@ -106,7 +103,7 @@ class EOSCP:
     requests: List[Request]
     observations: List[Observation]
     
-    def plot_schedule(self):
+    def plot_schedule(self, s: Dict[int, Tuple[Satellite, float]] = None):
         fig, ax = plt.subplots(figsize=(10, 10))
         
         # Generate distinct colors for each user
@@ -138,17 +135,26 @@ class EOSCP:
         max_observations_per_satellite = max(satellite.capacity for satellite in self.satellites)
         
         # Plotting observations
-     
         for observation in self.observations:
             satellite_idx = self.satellites.index(observation.s)
             color = user_colors[observation.u.id]
             height = (satellite_idx - 0.4) + (observation.id % max_observations_per_satellite) * observation_height_offset
-            bar = ax.broken_barh([(observation.t_start, observation.t_end - observation.t_start)], (height, 0.1), facecolors=color, alpha=0.2)
+            
+            if s and observation.id in s:
+                # Use mapped satellite and start time if available
+                mapped_satellite, mapped_start_time = s[observation.id]
+                mapped_satellite_idx = self.satellites.index(mapped_satellite)
+                height = (mapped_satellite_idx - 0.4) + (observation.id % max_observations_per_satellite) * observation_height_offset
+                ax.broken_barh([(mapped_start_time, observation.delta)], (height, 0.1), facecolors=color)
+            
+            # observation window
+            ax.broken_barh([(observation.t_start, observation.t_end - observation.t_start)], (height, 0.1), facecolors=color, alpha=0.2)
         
             # Annotate each observation
             mid_point = observation.t_start + (observation.t_end - observation.t_start) / 2
             ax.annotate(f'o_{{{observation.u.id},{observation.request.id},{observation.i}}}', xy=(mid_point, height), xytext=(0, 5),
                         textcoords='offset points', ha='center', va='bottom', fontsize=8, color='black')
+            
         ax.set_xlabel('Time')
         ax.set_ylabel('Satellites')
         ax.set_yticks(range(len(self.satellites)))

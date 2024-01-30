@@ -1,7 +1,7 @@
 import random
 from math import ceil
 
-from esop import EOSCP, Observation, Request, Satellite, User
+from eoscsp import EOSCSP, Observation, Request, Satellite, User
 
 OBSERVATION_PER_REQUEST = 2
 
@@ -15,8 +15,8 @@ def generate_non_overlapping_times(start, end, num_windows):
     
     current_start = start
     while len(times) < num_windows:
-        t_start = random.uniform(current_start, end - minimum_duration*3)
-        t_end = random.uniform(t_start + minimum_duration, end- minimum_duration)
+        t_start = random.uniform(current_start, end - minimum_duration * 3)
+        t_end = random.uniform(t_start + minimum_duration, end - minimum_duration*2)
         
         times.append((t_start, t_end))
         
@@ -33,8 +33,8 @@ def generate_request_within_time_window(t_start, t_end, user):
     return Request(request_t_start, request_t_end, reward, user)
 
 
-def add_theta(observations, request, satellite, user, i):
-    observation = Observation(i, request.t_start, request.t_end, request, request.reward, satellite, user, user.p)
+def add_theta(t_start, t_end, observations, request, satellite, user, i):
+    observation = Observation(i, t_start, t_end, request.delta, request, request.reward, satellite, user, user.p)
     observations.append(observation)
     request.theta.append(observation)
 
@@ -77,7 +77,9 @@ def generate_random_esop_instance(num_satellites, num_exclusive_users, num_reque
             
             # Generate observations for the request
             for i in range(OBSERVATION_PER_REQUEST):
-                add_theta(observations, request, satellite, user, i)
+                obs_start = random.uniform(excl_t_start, excl_t_end - request.delta)
+                obs_end = random.uniform(obs_start + request.delta, excl_t_end)
+                add_theta(obs_start,obs_end, observations, request, satellite, user, i)
         else:
             # Generate requests for central scheduler or users without exclusive times
             request = generate_request_within_time_window(start_time, end_time, user)
@@ -85,10 +87,12 @@ def generate_random_esop_instance(num_satellites, num_exclusive_users, num_reque
             
             # Generate observations for the request
             for i in range(OBSERVATION_PER_REQUEST):
+                obs_start = random.uniform(start_time, end_time - request.delta)
+                obs_end = random.uniform(obs_start + request.delta, end_time)
                 obs_satellite = random.choice(satellites)
-                add_theta(observations, request, obs_satellite, user, i)
+                add_theta(obs_start,obs_end, observations, request, obs_satellite, user, i)
     
-    return EOSCP(satellites=satellites, users=users, requests=requests, observations=observations)
+    return EOSCSP(satellites=satellites, users=users, requests=requests, observations=observations)
 
 
 if __name__ == '__main__':
