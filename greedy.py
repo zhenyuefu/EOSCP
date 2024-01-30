@@ -15,15 +15,17 @@ def first_slot(observation: Observation, R: Dict[int, List]) -> Optional[Tuple[S
             for i in range(len(R[s.id]) + 1):
                 t_start_prime = observation.t_start
                 if i > 0:
-                    _, (_, t_prev_end) = R[s.id][i - 1]
-                    t_start_prime = max(observation.t_start, t_prev_end + s.transition_time)
+                    obs_prev, (_, t_prev_start) = R[s.id][i - 1]
+                    t_start_prime = max(observation.t_start, t_prev_start + obs_prev.delta + s.transition_time)
                 if t_start_prime + observation.delta <= observation.t_end:
                     if i == len(R[s.id]):
+                        t_upper = observation.t_end
                         t_end_prime = t_start_prime + observation.delta
                     else:
-                        _, (_, t_next_start) = R[s.id][i]
-                        t_end_prime = min(t_next_start, t_start_prime + observation.delta)
-                    if t_start_prime < t_end_prime:
+                        o_i, (s_i, t_next_start) = R[s.id][i]
+                        t_upper = t_next_start
+                        t_end_prime = t_start_prime + observation.delta + s.transition_time
+                    if t_start_prime < t_end_prime <= t_upper:
                         R[s.id].insert(i, (observation, (s, t_start_prime)))
                         return s, t_start_prime
     return None
@@ -33,15 +35,21 @@ def greedy_eoscsp_solver(p: EOSCSP) -> Dict[int, Tuple[Satellite, float]]:
     # mapping from observation to (satellite, start_time)
     m = {}
     sorted_observations = sorted(p.observations, key=lambda obs: (obs.p, obs.t_start))
-    request_dict = {s.id: [] for s in p.satellites}
+    # r[s.id] = [(o, (s, t_start))]
+    r = {s.id: [] for s in p.satellites}
     
-    for o in sorted_observations:
-        t = first_slot(o, request_dict)
+    while sorted_observations:
+        o = sorted_observations[0]  # Always work with the first element
+        t = first_slot(o, r)
         if t is not None:
             m[o.id] = t
             # Remove the observation opportunities of the same request
             sorted_observations = [obs for obs in sorted_observations if obs.request != o.request]
+        else:
+            # Move to the next observation if no slot is found
+            sorted_observations.pop(0)
     return m
+
 
 
 if __name__ == '__main__':
