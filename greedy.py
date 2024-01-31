@@ -1,10 +1,10 @@
-from typing import List, Tuple, Optional, Dict
+from typing import List, Tuple, Optional, Dict, Union
 
 from eoscsp import EOSCSP, Observation, Satellite
 from utils import generate_random_esop_instance
 
 
-def first_slot(observation: Observation, R: Dict[int, List]) -> Optional[Tuple[Satellite, float]]:
+def first_slot(observation: Observation, R: Dict[int, List[Tuple[Observation,Tuple[Satellite,float]]]]) -> Optional[Tuple[Satellite, float]]:
     s = observation.s
     if len(R[s.id]) < s.capacity:
         if not R[s.id]:  # R[s.id] is empty
@@ -31,12 +31,13 @@ def first_slot(observation: Observation, R: Dict[int, List]) -> Optional[Tuple[S
     return None
 
 
-def greedy_eoscsp_solver(p: EOSCSP) -> Dict[int, Tuple[Satellite, float]]:
+def greedy_eoscsp_solver(p: EOSCSP,r=None) -> Tuple[Dict[int, Tuple[Satellite, float]], Dict[int, List[Tuple[Observation,Tuple[Satellite,float]]]]]:
     # mapping from observation to (satellite, start_time)
     m = {}
     sorted_observations = sorted(p.observations, key=lambda obs: (obs.p, obs.t_start))
     # r[s.id] = [(o, (s, t_start))]
-    r = {s.id: [] for s in p.satellites}
+    if r is None:
+        r = {s.id: [] for s in p.satellites}
     
     while sorted_observations:
         o = sorted_observations[0]  # Always work with the first element
@@ -48,11 +49,11 @@ def greedy_eoscsp_solver(p: EOSCSP) -> Dict[int, Tuple[Satellite, float]]:
         else:
             # Move to the next observation if no slot is found
             sorted_observations.pop(0)
-    return m
-
+    
+    return m, r 
 
 
 if __name__ == '__main__':
     eoscsp = generate_random_esop_instance(3, 2, 5)
-    schedule = greedy_eoscsp_solver(eoscsp)
+    schedule,r = greedy_eoscsp_solver(eoscsp)
     eoscsp.plot_schedule(schedule)

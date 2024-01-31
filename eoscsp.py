@@ -10,13 +10,13 @@ from matplotlib.patches import Patch
 @dataclass
 class Request:
     r"""
-    请求定义为具有以下属性的元组: :math:`r = (t^start, t^end, \delta, \rho, p, u, \theta)`。
-    :param t_start: 请求的有效时间窗口开始时间，属于实数集 R。
-    :param t_end: 请求的有效时间窗口结束时间，属于实数集 R。
-    :param delta: 请求的持续时间，属于实数集 R。
-    :param reward: 如果请求被满足，则提供的奖励，属于实数集 R。
-    :param u: 请求者的标识，属于用户集 U。
-    :param theta: 满足请求的观测机会列表。
+    A request is defined as a tuple with the following properties: :math:`r = (t^start, t^end, \delta, \rho, p, u, \theta)`.
+    :param t_start: The start time of the request's valid time window, belonging to the set of real numbers R.
+    :param t_end: The end time of the request's valid time window, belonging to the set of real numbers R.
+    :param delta: The duration of the request, belonging to the set of real numbers R.
+    :param reward: The reward offered if the request is fulfilled, belonging to the set of real numbers R.
+    :param u: The identifier of the requester, belonging to the set of users U.
+    :param theta: The list of observation opportunities to satisfy the request.
     """
     id: int = field(default_factory=lambda counter=count(): next(counter), init=False)
     t_start: float
@@ -33,11 +33,12 @@ class Request:
 @dataclass
 class Satellite:
     r"""
-    卫星定义为具有以下属性的元组：:math:`s = (t_start, t_end ,K, τ)`。
-    :param start_time: 卫星轨道计划的开始时间，属于实数集 R。
-    :param end_time: 卫星轨道计划的结束时间，属于实数集 R。
-    :param capacity: 卫星在其轨道计划期间的最大观测数量，属于正整数集 N+。
-    :param transition_time: 卫星在两个观测之间的转换时间，属于实数集 R+。
+    A satellite is defined as a tuple with the following properties: :math:`s = (t_start, t_end, K, τ)`.
+    :param start_time: The start time of the satellite's orbital plan, belonging to the set of real numbers R.
+    :param end_time: The end time of the satellite's orbital plan, belonging to the set of real numbers R.
+    :param capacity: The maximum number of observations the satellite can make during its orbital plan, belonging to the set of positive integers N+.
+    :param transition_time: The transition time for the satellite between two observations, belonging to the set of positive real numbers R+.
+
     """
     start_time: float
     end_time: float
@@ -49,12 +50,12 @@ class Satellite:
 @dataclass
 class User:
     r"""
-    用户定义为具有以下属性的元组: :math:`u = (e_u, p_u)`。
-    我们记 U^ex（U^nex）为拥有（或不拥有）独占轨道部分的用户集合。只有一个用户没有独占的轨道部分，即中央计划者u_0，且不存在重叠的独占部分。
-    :param exclusive_times: 一组（可能为空）的独占时间窗口集合，定义为 e_u={(s,(t^start, t^end))|s ∈ S,[t^start, t^end] ⊆ [t_s^start, t_s^end]}
-                ⊂ (S×(R×R))。其中 s 代表卫星，[t^start, t^end] 代表时间区间，且该区间是卫星 s 的有效时间窗口 [t_s^start, t_s^end]
-                的子集。
-    :param p: 优先级，属于正整数集 N+（数值越低，优先级越高，用于解决冲突）。
+    A user is defined as a tuple with the following properties: :math:`u = (e_u, p_u)`.
+    We denote U^ex (U^nex) as the set of users who have (or do not have) an exclusive segment of the orbit. There is only one user without an exclusive segment of the orbit, namely the central planner u_0, and there are no overlapping exclusive segments.
+    :param exclusive_times: A set (which can be empty) of exclusive time window sets, defined as e_u={(s,(t^start, t^end))|s ∈ S,[t^start, t^end] ⊆ [t_s^start, t_s^end]}
+                    ⊂ (S×(R×R)). Where s represents the satellite, [t^start, t^end] represents the time interval, and this interval is a subset of the effective time window [t_s^start, t_s^end]
+                    of satellite s.
+    :param p: Priority, belonging to the set of positive integers N+ (the lower the number, the higher the priority, used for conflict resolution).
     """
     exclusive_times: List[Tuple[Satellite, Tuple[float, float]]]  # 独占时间窗口集合
     p: int = field(default=10)  # 优先级
@@ -64,17 +65,17 @@ class User:
 @dataclass
 class Observation:
     r"""
-    观测机会（或观测）定义为具有以下属性的元组: :math:`o = (t^start, t^end, \delta, r, \rho, s, u, p)`。
-    :param t_start: 观测的有效时间窗口开始时间, 属于实数集 R。
-    :param t_end: 观测的有效时间窗口结束时间, 属于实数集 R。
-    :param delta: 观测的持续时间, 属于实数集 R, 且 :math:`delta_o = delta_r_o`。
-    :param request: 观测所关联的请求。
-    :param rho: 观测的奖励, 属于实数集 R, 它是由请求 r_o 和天气信息综合决定的。
-    :param s: 可以安排此观测的卫星。
-    :param u: 观测的所有者, 属于用户集 U, 且 :math:`u = u_r_o`。
-    :param p: 观测的优先级, 属于正整数集 N+, 且 :math:`p = p_r_o`。
-    请求奖励与观测奖励之间的差异源于实际情况中, 天气条件或观测的入射角可能会增加或减少给定请求的基本奖励。
-    因此, 我们的模型可以考虑不同的奖励, 但在这项研究中, 我们只关注观测奖励直接继承自请求的情况。
+    An observation opportunity (or observation) is defined as a tuple with the following properties: :math:`o = (t^start, t^end, \delta, r, \rho, s, u, p)`.
+    :param t_start: The start time of the observation's valid time window, belonging to the set of real numbers R.
+    :param t_end: The end time of the observation's valid time window, belonging to the set of real numbers R.
+    :param delta: The duration of the observation, belonging to the set of real numbers R, and :math:`delta_o = delta_r_o`.
+    :param request: The request associated with the observation.
+    :param rho: The reward for the observation, belonging to the set of real numbers R. It is determined by the request r_o and weather information.
+    :param s: The satellite that can schedule this observation.
+    :param u: The owner of the observation, belonging to the set of users U, and :math:`u = u_r_o`.
+    :param p: The priority of the observation, belonging to the set of positive integers N+, and :math:`p = p_r_o`.
+    The difference between request reward and observation reward arises from the fact that in real situations, weather conditions or the observation's angle of incidence may increase or decrease the basic reward for a given request. 
+    Therefore, our model can consider different rewards, but in this study, we focus on the case where the observation reward directly inherits from the request.
     """
     id: int = field(default_factory=lambda counter=count(): next(counter), init=False)
     i: int
@@ -91,12 +92,12 @@ class Observation:
 @dataclass
 class EOSCSP:
     r"""
-    地球观测卫星星座调度问题定义为一个元组 :math:`P = (S, U, R, O)`，其中 S 是卫星集合，U 是用户集合，R 是请求集合，O 是需要调度以履行 R 中请求的观测集合。
-    这个问题的目标是有效地调度卫星星座中的观测，以满足用户的请求，同时考虑独占时间窗口和卫星的能力限制。
-    :param satellites: 卫星集合 S，包含多个卫星对象。
-    :param users: 用户集合 U，包含多个用户对象。
-    :param requests: 请求集合 R，包含多个请求对象。
-    :param observations: 观测集合 O，包含多个观测对象。
+    The Earth Observation Satellite Constellation Scheduling Problem is defined as a tuple :math:`P = (S, U, R, O)`, where S is the set of satellites, U is the set of users, R is the set of requests, and O is the set of observations that need to be scheduled to fulfill the requests in R.
+    The goal of this problem is to efficiently schedule observations in the satellite constellation to satisfy the requests of users, while considering exclusive time windows and satellite capability constraints.
+    :param satellites: The set of satellites S, containing multiple satellite objects.
+    :param users: The set of users U, containing multiple user objects.
+    :param requests: The set of requests R, containing multiple request objects.
+    :param observations: The set of observations O, containing multiple observation objects.
     """
     satellites: List[Satellite]
     users: List[User]
@@ -165,13 +166,3 @@ class EOSCSP:
         ax.legend(handles=legend_handles, loc='upper right')
         
         plt.show()
-
-
-@dataclass
-class Solution:
-    r"""
-    EOSCSP 的解决方案是一个映射 :math:`M={(o, t) | o \in O, t \in [t_o^{start}, t_o^{end}]}`，它为每个请求最多分配一个观测的开始时间，
-    同时确保独占用户在其各自的独占窗口上有观测被安排。一个最优解是使总体奖励最大化的解决方案（安排的观测奖励之和）:math:`\argmax_M \sum_{(o, t) \in M} \rho_o`。
-    :param schedule: 字典，将观测对象映射到其在独占窗口内的开始时间。
-    """
-    schedule: Dict[Observation, float]
