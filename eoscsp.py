@@ -36,8 +36,10 @@ class Satellite:
     A satellite is defined as a tuple with the following properties: :math:`s = (t_start, t_end, K, τ)`.
     :param start_time: The start time of the satellite's orbital plan, belonging to the set of real numbers R.
     :param end_time: The end time of the satellite's orbital plan, belonging to the set of real numbers R.
-    :param capacity: The maximum number of observations the satellite can make during its orbital plan, belonging to the set of positive integers N+.
-    :param transition_time: The transition time for the satellite between two observations, belonging to the set of positive real numbers R+.
+    :param capacity: The maximum number of observations the satellite can make during its orbital plan, belonging to the set of positive
+    integers N+.
+    :param transition_time: The transition time for the satellite between two observations, belonging to the set of positive real numbers
+    R+.
 
     """
     start_time: float
@@ -51,11 +53,15 @@ class Satellite:
 class User:
     r"""
     A user is defined as a tuple with the following properties: :math:`u = (e_u, p_u)`.
-    We denote U^ex (U^nex) as the set of users who have (or do not have) an exclusive segment of the orbit. There is only one user without an exclusive segment of the orbit, namely the central planner u_0, and there are no overlapping exclusive segments.
-    :param exclusive_times: A set (which can be empty) of exclusive time window sets, defined as e_u={(s,(t^start, t^end))|s ∈ S,[t^start, t^end] ⊆ [t_s^start, t_s^end]}
-                    ⊂ (S×(R×R)). Where s represents the satellite, [t^start, t^end] represents the time interval, and this interval is a subset of the effective time window [t_s^start, t_s^end]
+    We denote U^ex (U^nex) as the set of users who have (or do not have) an exclusive segment of the orbit. There is only one user
+    without an exclusive segment of the orbit, namely the central planner u_0, and there are no overlapping exclusive segments.
+    :param exclusive_times: A set (which can be empty) of exclusive time window sets, defined as e_u={(s,(t^start, t^end))|s ∈ S,
+    [t^start, t^end] ⊆ [t_s^start, t_s^end]}
+                    ⊂ (S×(R×R)). Where s represents the satellite, [t^start, t^end] represents the time interval, and this interval is a
+                    subset of the effective time window [t_s^start, t_s^end]
                     of satellite s.
-    :param p: Priority, belonging to the set of positive integers N+ (the lower the number, the higher the priority, used for conflict resolution).
+    :param p: Priority, belonging to the set of positive integers N+ (the lower the number, the higher the priority, used for conflict
+    resolution).
     """
     exclusive_times: List[Tuple[Satellite, Tuple[float, float]]]  # 独占时间窗口集合
     p: int = field(default=10)  # 优先级
@@ -65,17 +71,21 @@ class User:
 @dataclass
 class Observation:
     r"""
-    An observation opportunity (or observation) is defined as a tuple with the following properties: :math:`o = (t^start, t^end, \delta, r, \rho, s, u, p)`.
+    An observation opportunity (or observation) is defined as a tuple with the following properties: :math:`o = (t^start, t^end, \delta,
+    r, \rho, s, u, p)`.
     :param t_start: The start time of the observation's valid time window, belonging to the set of real numbers R.
     :param t_end: The end time of the observation's valid time window, belonging to the set of real numbers R.
     :param delta: The duration of the observation, belonging to the set of real numbers R, and :math:`delta_o = delta_r_o`.
     :param request: The request associated with the observation.
-    :param rho: The reward for the observation, belonging to the set of real numbers R. It is determined by the request r_o and weather information.
+    :param rho: The reward for the observation, belonging to the set of real numbers R. It is determined by the request r_o and weather
+    information.
     :param s: The satellite that can schedule this observation.
     :param u: The owner of the observation, belonging to the set of users U, and :math:`u = u_r_o`.
     :param p: The priority of the observation, belonging to the set of positive integers N+, and :math:`p = p_r_o`.
-    The difference between request reward and observation reward arises from the fact that in real situations, weather conditions or the observation's angle of incidence may increase or decrease the basic reward for a given request. 
-    Therefore, our model can consider different rewards, but in this study, we focus on the case where the observation reward directly inherits from the request.
+    The difference between request reward and observation reward arises from the fact that in real situations, weather conditions or the
+    observation's angle of incidence may increase or decrease the basic reward for a given request.
+    Therefore, our model can consider different rewards, but in this study, we focus on the case where the observation reward directly
+    inherits from the request.
     """
     id: int = field(default_factory=lambda counter=count(): next(counter), init=False)
     i: int
@@ -92,8 +102,11 @@ class Observation:
 @dataclass
 class EOSCSP:
     r"""
-    The Earth Observation Satellite Constellation Scheduling Problem is defined as a tuple :math:`P = (S, U, R, O)`, where S is the set of satellites, U is the set of users, R is the set of requests, and O is the set of observations that need to be scheduled to fulfill the requests in R.
-    The goal of this problem is to efficiently schedule observations in the satellite constellation to satisfy the requests of users, while considering exclusive time windows and satellite capability constraints.
+    The Earth Observation Satellite Constellation Scheduling Problem is defined as a tuple :math:`P = (S, U, R, O)`, where S is the set
+    of satellites, U is the set of users, R is the set of requests, and O is the set of observations that need to be scheduled to fulfill
+    the requests in R.
+    The goal of this problem is to efficiently schedule observations in the satellite constellation to satisfy the requests of users,
+    while considering exclusive time windows and satellite capability constraints.
     :param satellites: The set of satellites S, containing multiple satellite objects.
     :param users: The set of users U, containing multiple user objects.
     :param requests: The set of requests R, containing multiple request objects.
@@ -150,12 +163,12 @@ class EOSCSP:
             
             # observation window
             ax.broken_barh([(observation.t_start, observation.t_end - observation.t_start)], (height, 0.1), facecolors=color, alpha=0.2)
-        
+            
             # Annotate each observation
             mid_point = observation.t_start + (observation.t_end - observation.t_start) / 2
             ax.annotate(f'o_{{{observation.u.id},{observation.request.id},{observation.i}}}', xy=(mid_point, height), xytext=(0, 5),
                         textcoords='offset points', ha='center', va='bottom', fontsize=8, color='black')
-            
+        
         ax.set_xlabel('Time')
         ax.set_ylabel('Satellites')
         ax.set_yticks(range(len(self.satellites)))

@@ -1,4 +1,5 @@
 import random
+
 from math import ceil
 
 from eoscsp import EOSCSP, Observation, Request, Satellite, User
@@ -16,7 +17,7 @@ def generate_non_overlapping_times(start, end, num_windows):
     current_start = start
     while len(times) < num_windows:
         t_start = random.uniform(current_start, end - minimum_duration * 3)
-        t_end = random.uniform(t_start + minimum_duration, end - minimum_duration*2)
+        t_end = random.uniform(t_start + minimum_duration, end - minimum_duration * 2)
         
         times.append((t_start, t_end))
         
@@ -79,7 +80,7 @@ def generate_random_esop_instance(num_satellites, num_exclusive_users, num_reque
             for i in range(OBSERVATION_PER_REQUEST):
                 obs_start = random.uniform(excl_t_start, excl_t_end - request.delta)
                 obs_end = random.uniform(obs_start + request.delta, excl_t_end)
-                add_theta(obs_start,obs_end, observations, request, satellite, user, i)
+                add_theta(obs_start, obs_end, observations, request, satellite, user, i)
         else:
             # Generate requests for central scheduler or users without exclusive times
             request = generate_request_within_time_window(start_time, end_time, user)
@@ -90,7 +91,7 @@ def generate_random_esop_instance(num_satellites, num_exclusive_users, num_reque
                 obs_start = random.uniform(start_time, end_time - request.delta)
                 obs_end = random.uniform(obs_start + request.delta, end_time)
                 obs_satellite = random.choice(satellites)
-                add_theta(obs_start,obs_end, observations, request, obs_satellite, user, i)
+                add_theta(obs_start, obs_end, observations, request, obs_satellite, user, i)
     
     return EOSCSP(satellites=satellites, users=users, requests=requests, observations=observations)
 

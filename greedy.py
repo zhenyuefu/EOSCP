@@ -1,10 +1,11 @@
-from typing import List, Tuple, Optional, Dict, Union
+from typing import Dict, List, Optional, Tuple
 
 from eoscsp import EOSCSP, Observation, Satellite
 from utils import generate_random_esop_instance
 
 
-def first_slot(observation: Observation, R: Dict[int, List[Tuple[Observation,Tuple[Satellite,float]]]]) -> Optional[Tuple[Satellite, float]]:
+def first_slot(observation: Observation, R: Dict[int, List[Tuple[Observation, Tuple[Satellite, float]]]]) -> Optional[
+    Tuple[Satellite, float]]:
     s = observation.s
     if len(R[s.id]) < s.capacity:
         if not R[s.id]:  # R[s.id] is empty
@@ -31,7 +32,8 @@ def first_slot(observation: Observation, R: Dict[int, List[Tuple[Observation,Tup
     return None
 
 
-def greedy_eoscsp_solver(p: EOSCSP,r=None) -> Tuple[Dict[int, Tuple[Satellite, float]], Dict[int, List[Tuple[Observation,Tuple[Satellite,float]]]]]:
+def greedy_eoscsp_solver(p: EOSCSP, r=None) -> Tuple[
+    Dict[int, Tuple[Satellite, float]], Dict[int, List[Tuple[Observation, Tuple[Satellite, float]]]]]:
     # mapping from observation to (satellite, start_time)
     m = {}
     sorted_observations = sorted(p.observations, key=lambda obs: (obs.p, obs.t_start))
@@ -50,10 +52,14 @@ def greedy_eoscsp_solver(p: EOSCSP,r=None) -> Tuple[Dict[int, Tuple[Satellite, f
             # Move to the next observation if no slot is found
             sorted_observations.pop(0)
     
-    return m, r 
+    M = [x for value in r.values() for x in value]
+    # Calculate total reward
+    total_reward = sum([o.rho for o, _ in M])
+    print("Reward of greedy: ", total_reward)
+    return m, r
 
 
 if __name__ == '__main__':
     eoscsp = generate_random_esop_instance(3, 2, 5)
-    schedule,r = greedy_eoscsp_solver(eoscsp)
+    schedule, r = greedy_eoscsp_solver(eoscsp)
     eoscsp.plot_schedule(schedule)
