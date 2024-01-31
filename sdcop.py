@@ -23,7 +23,7 @@ def s_dcop(p: EOSCSP):
             # create a sub problem P[u] only has request and observations of user u
             sub_p = EOSCSP(satellites=p.satellites, users=p.users, requests=[r for r in p.requests if r.u == user],
                            observations=[o for o in p.observations if o.u == user])
-            plans, r = greedy_eoscsp_solver(sub_p)
+            plans, r,_ = greedy_eoscsp_solver(sub_p)
             user_solution = [x for value in r.values() for x in value]
             user_solutions[user.id] = user_solution
             rs[user.id] = r
@@ -53,14 +53,14 @@ def s_dcop(p: EOSCSP):
     remaining_requests = [req for req in p.requests if req.id not in processed_requests]
     obs = [obs for req in remaining_requests for obs in req.theta]
     p_u0 = EOSCSP(satellites=p.satellites, users=[p.users[0]], requests=remaining_requests, observations=obs)
-    _, r = greedy_eoscsp_solver(p_u0, R_ex)
+    _, r,_ = greedy_eoscsp_solver(p_u0, R_ex)
     M = [x for value in r.values() for x in value]
     total_reward = sum([o.rho for o, _ in M])
     print("Reward of sdcop: ", total_reward)
     final_solution = {}
     for observation, (satellite, start_time) in M:
         final_solution[observation.id] = (satellite, start_time)
-    return final_solution
+    return final_solution, total_reward
 
 
 def generate_dcop_yaml(p: EOSCSP,
@@ -180,5 +180,5 @@ def integrate_solutions(eoscsp, user_solutions):
 
 if __name__ == '__main__':
     eoscsp = generate_random_esop_instance(4, 3, 8)
-    schedule = s_dcop(eoscsp)
+    schedule,reward = s_dcop(eoscsp)
     eoscsp.plot_schedule(schedule)

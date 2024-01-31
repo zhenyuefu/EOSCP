@@ -68,7 +68,7 @@ def psi_solver(p: EOSCSP):
         if user.exclusive_times:
             sub_p = EOSCSP(satellites=p.satellites, users=[user], requests=[r for r in p.requests if r.u == user],
                            observations=[o for o in p.observations if o.u == user])
-            _, r = greedy_eoscsp_solver(sub_p)
+            _, r,_ = greedy_eoscsp_solver(sub_p)
             
             plans.extend([x for value in r.values() for x in value])
             
@@ -92,7 +92,8 @@ def psi_solver(p: EOSCSP):
             plans.append((sig_u[w][i][0], (sat, sig_u[w][i][1])))
             processed_requests.add(req.id)
             for r_id in removed:
-                processed_requests.remove(r_id)
+                if r_id in processed_requests:
+                    processed_requests.remove(r_id)
     
     # Sort plans for execution order
     plans.sort(key=lambda x: (x[1][1]))
@@ -104,7 +105,7 @@ def psi_solver(p: EOSCSP):
     remaining_requests = [req for req in not_exclusive_requests if req.id not in processed_requests]
     obs = [obs for req in remaining_requests for obs in req.theta]
     p_u0 = EOSCSP(satellites=p.satellites, users=[p.users[0]], requests=remaining_requests, observations=obs)
-    _, r = greedy_eoscsp_solver(p_u0, R_ex)
+    _, r,_ = greedy_eoscsp_solver(p_u0, R_ex)
     M = [x for value in r.values() for x in value]
     
     # Calculate total reward
@@ -116,7 +117,7 @@ def psi_solver(p: EOSCSP):
     for observation, (satellite, start_time) in M:
         final_solution[observation.id] = (satellite, start_time)
     
-    return final_solution
+    return final_solution,total_reward
 
 
 def ssi_solver(p: EOSCSP):
@@ -135,7 +136,7 @@ def ssi_solver(p: EOSCSP):
         if user.exclusive_times:
             sub_p = EOSCSP(satellites=p.satellites, users=[user], requests=[r for r in p.requests if r.u == user],
                            observations=[o for o in p.observations if o.u == user])
-            _, r = greedy_eoscsp_solver(sub_p)
+            _, r,_ = greedy_eoscsp_solver(sub_p)
             
             plans.extend([x for value in r.values() for x in value])
             R_ex[user.id] = r
@@ -160,7 +161,8 @@ def ssi_solver(p: EOSCSP):
             plans.append((sig_u[w][0], (sat, sig_u[w][1])))
             processed_requests.add(not_exclusive_requests[i].id)
             for i in removed:
-                processed_requests.remove(i)
+                if i in processed_requests:
+                    processed_requests.remove(i)
     
     plans.sort(key=lambda x: (x[1][1]))
     R_ex = {sat.id: [] for sat in p.satellites}
@@ -172,7 +174,7 @@ def ssi_solver(p: EOSCSP):
     obs = [obs for req in remaining_requests for obs in req.theta]
     p_u0 = EOSCSP(satellites=p.satellites, users=[p.users[0]], requests=remaining_requests, observations=obs)
     
-    _, r = greedy_eoscsp_solver(p_u0, R_ex)
+    _, r,_ = greedy_eoscsp_solver(p_u0, R_ex)
     M = [x for value in r.values() for x in value]
     
     # Calculate total reward
@@ -183,10 +185,10 @@ def ssi_solver(p: EOSCSP):
     for observation, (satellite, start_time) in M:
         final_solution[observation.id] = (satellite, start_time)
     
-    return final_solution
+    return final_solution,total_reward
 
 
 if __name__ == '__main__':
     eoscsp = generate_random_esop_instance(4, 3, 10)
-    schedule = ssi_solver(eoscsp)
+    schedule,reward = ssi_solver(eoscsp)
     eoscsp.plot_schedule(schedule)

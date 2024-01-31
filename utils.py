@@ -2,7 +2,7 @@ import random
 
 from math import ceil
 
-from eoscsp import EOSCSP, Observation, Request, Satellite, User
+from eoscsp import EOSCSP, Observation, Request, Satellite, User, reset_counters
 
 OBSERVATION_PER_REQUEST = 2
 
@@ -41,6 +41,7 @@ def add_theta(t_start, t_end, observations, request, satellite, user, i):
 
 
 def generate_random_esop_instance(num_satellites, num_exclusive_users, num_requests):
+    reset_counters()
     # start_time, end_time = random.randint(0, 8), random.randint(10, 24)
     start_time, end_time = 2, 20
     satellites = [Satellite(start_time=start_time, end_time=end_time, capacity=random.randint(4, 10), transition_time=0.2) for _ in

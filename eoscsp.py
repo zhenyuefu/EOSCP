@@ -6,6 +6,17 @@ from matplotlib import pyplot as plt
 from matplotlib.colors import TABLEAU_COLORS
 from matplotlib.patches import Patch
 
+r_counter = count()
+sat_counter = count()
+u_counter = count()
+obs_counter = count()
+
+def reset_counters():
+    global r_counter, sat_counter, u_counter, obs_counter
+    r_counter = count()
+    sat_counter = count()
+    u_counter = count()
+    obs_counter = count()
 
 @dataclass
 class Request:
@@ -18,7 +29,7 @@ class Request:
     :param u: The identifier of the requester, belonging to the set of users U.
     :param theta: The list of observation opportunities to satisfy the request.
     """
-    id: int = field(default_factory=lambda counter=count(): next(counter), init=False)
+    id: int = field(default_factory=lambda: next(r_counter), init=False)
     t_start: float
     t_end: float
     delta: float = field(init=False)
@@ -46,7 +57,7 @@ class Satellite:
     end_time: float
     capacity: int
     transition_time: float
-    id: int = field(default_factory=lambda counter=count(): next(counter))
+    id: int = field(default_factory=lambda: next(sat_counter))
 
 
 @dataclass
@@ -65,7 +76,7 @@ class User:
     """
     exclusive_times: List[Tuple[Satellite, Tuple[float, float]]]  # 独占时间窗口集合
     p: int = field(default=10)  # 优先级
-    id: int = field(default_factory=lambda counter=count(): next(counter))
+    id: int = field(default_factory=lambda: next(u_counter))
 
 
 @dataclass
@@ -87,7 +98,7 @@ class Observation:
     Therefore, our model can consider different rewards, but in this study, we focus on the case where the observation reward directly
     inherits from the request.
     """
-    id: int = field(default_factory=lambda counter=count(): next(counter), init=False)
+    id: int = field(default_factory=lambda: next(obs_counter), init=False)
     i: int
     t_start: float
     t_end: float

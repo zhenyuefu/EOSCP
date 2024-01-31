@@ -33,7 +33,7 @@ def first_slot(observation: Observation, R: Dict[int, List[Tuple[Observation, Tu
 
 
 def greedy_eoscsp_solver(p: EOSCSP, r=None) -> Tuple[
-    Dict[int, Tuple[Satellite, float]], Dict[int, List[Tuple[Observation, Tuple[Satellite, float]]]]]:
+    Dict[int, Tuple[Satellite, float]], Dict[int, List[Tuple[Observation, Tuple[Satellite, float]]]],float]:
     # mapping from observation to (satellite, start_time)
     m = {}
     sorted_observations = sorted(p.observations, key=lambda obs: (obs.p, obs.t_start))
@@ -56,10 +56,10 @@ def greedy_eoscsp_solver(p: EOSCSP, r=None) -> Tuple[
     # Calculate total reward
     total_reward = sum([o.rho for o, _ in M])
     print("Reward of greedy: ", total_reward)
-    return m, r
+    return m, r, total_reward
 
 
 if __name__ == '__main__':
     eoscsp = generate_random_esop_instance(3, 2, 5)
-    schedule, r = greedy_eoscsp_solver(eoscsp)
+    schedule, r,reward = greedy_eoscsp_solver(eoscsp)
     eoscsp.plot_schedule(schedule)
