@@ -4,7 +4,7 @@ from math import ceil
 
 from eoscsp import EOSCSP, Observation, Request, Satellite, User, reset_counters
 
-OBSERVATION_PER_REQUEST = 2
+OBSERVATION_PER_REQUEST = 5
 
 
 # def generate_non_overlapping_times(start, end, num_windows):
